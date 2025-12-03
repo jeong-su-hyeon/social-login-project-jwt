@@ -3,6 +3,7 @@ Study project on Spring Security &amp; OAuth for social login (JWT)
 
 <br>
 
+## 📂 파일 구성
 ### `DTO`
 - DTO (Data Transfer Object) -> 서버-클라이언트 간에 데이터를 주고 받기 위한 클래스
 - `ResponseDTO` :  공통 API 응답 포맷을 제공하는 클래스로, Rest API에서 필수적으로 사용되는 패턴이다.
