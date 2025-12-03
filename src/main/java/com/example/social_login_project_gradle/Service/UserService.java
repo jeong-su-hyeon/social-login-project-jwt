@@ -16,14 +16,14 @@ public class UserService {
     private final UserRepository userRepository;    // 데이터베이스 조회/저장
 
     // [추가] 사용자 정보 저장 (회원가입)
-    public UserEntity insertUser(UserEntity userEntity) {
+    public UserEntity insertUser(UserEntity user) {
         // null 체크
-        if (userEntity == null || userEntity.getUsername() == null) {
+        if (user == null || user.getUsername() == null) {
             throw new RuntimeException("[Service] 유효하지 않은 속성");
         }
 
         // userEntity의 사용자 이메일 받아오기
-        final String username = userEntity.getUsername();
+        final String username = user.getUsername();
 
         // 사용자 이메일 중복 체크
         if (userRepository.existsByUsername(username)) {
@@ -32,7 +32,7 @@ public class UserService {
         }
 
         // 사용자 정보 저장
-        return userRepository.save(userEntity);
+        return userRepository.save(user);
     }
 
     // [조회] 사용자 인증 (로그인)
