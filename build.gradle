@@ -34,6 +34,23 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    constraints {
+        // JJWT 관련 모든 모듈에 0.12.5 버전을 적용하도록 강제함
+        implementation('io.jsonwebtoken:jjwt-api') {
+            version { strictly '0.12.5' }
+        }
+        runtimeOnly('io.jsonwebtoken:jjwt-impl') {
+            version { strictly '0.12.5' }
+        }
+        runtimeOnly('io.jsonwebtoken:jjwt-jackson') {
+            version { strictly '0.12.5' }
+        }
+    }
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'    // JWT API
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'      // 구현체
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'   // JSON 처리
 }
 
 tasks.named('test') {
