@@ -33,7 +33,7 @@ public class TodoService {
     }
 
     // [추가, 조회] 사용자 할일 추가 -> 전체 할일 리스트 조회
-    public List<TodoEntity> insertTodoList(final TodoEntity todoEntity) {
+    public List<TodoEntity> createTodoList(final TodoEntity todoEntity) {
         // (호출) 유효성 검사
         validate(todoEntity);
 
