@@ -3,7 +3,7 @@ package com.example.social_login_project_gradle.Security;
 import com.example.social_login_project_gradle.Entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +29,7 @@ public class TokenProvider {
     // -> JWT의 위,변조를 막고, 유효한 토큰인지 확인할 수 있음
     private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
-    // [생성] 사요자 정보 기반 JWT 토큰 생성
+    // [생성] 사용자 정보 기반 JWT 토큰 생성
     public String create(UserEntity userEntity) {
         // 1) 토큰 만료 시간을 현재 시각으로부터 1일 뒤로 설정
         Date expiryDate = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
@@ -37,24 +37,44 @@ public class TokenProvider {
         // 2) JWT 생성 및 반환
         return Jwts.builder()
                 //.signWith(SIGNING_KEY, SignatureAlgorithm.HS512)
-                .signWith(SIGNING_KEY)                           // 서명 알고리즘과 키 설정
-                .setSubject(String.valueOf(userEntity.getId()))  // 사용자 ID를 subject로 설정
+                .signWith(SIGNING_KEY)                         // 서명 알고리즘과 키 설정
+                .setSubject(String.valueOf(userEntity.getId()))  // 사용자 ID를 subject(주체)로 설정
                 .setIssuer("social-login-project-jwt")           // 토큰 발급자 정보 설정
-                .setIssuedAt(new Date())                         // 토큰 발급 시간 설정
-                .setExpiration(expiryDate)                       // 만료 시간 설정
+                .setIssuedAt(new Date())                         // 토큰 발급 시각 설정
+                .setExpiration(expiryDate)                       // 토큰 만료 시간 설정
                 .compact();                                      // 토큰 생성 완료
     }
 
     // [검증] JWT 토큰을 검증하고, 포함된 사용자 id를 반환
     // 클라이언트로부터 전달받은 JWT 토큰을 분석해 그 안에 담겨있는 사용자 정보를 확인
-//    public String validateAndGetUserId(String token) {
-//        // 1) 토큰 파싱 및 검증 (서명이 유효한지 확인)
-//        Claims claims = Jwts.parserBuilder()
-//                .setSingingKey(SIGNING_KEY) // 서명 키 설정
-//                .build()
-//                .parseClaimsJws(token)      // 토큰 파싱
-//                .getBody();                 // Payload(Claims) 추출
-//
-//        return  claims.getSubject();      
-//    }
+    // -> userId가 문자열 형태로 반환 됨
+    public String validateAndGetUserId(String token) {
+        // 1) 토큰 파싱 및 검증 (서명이 유효한지 확인)
+        // parserBuilder() -> parser()로 변경
+        Claims claims = Jwts.parser()
+                .setSigningKey(SIGNING_KEY) // 서명 키 설정
+                .build()
+                .parseClaimsJws(token)      // 토큰 파싱
+                .getBody();                 // Payload(Claims) 추출
+
+        return  claims.getSubject();        // 사용자 ID (subject) 반환
+    }
+
+    // [생성] 사용자 ID만을 기반으로 토큰 생성 (예. OAuth2 사용자 등)
+    // creat과 비슷한 역할
+    // 차이점) USerEntity 객체 전체를 받는 대신, 단순히 userId 하나만 받아서 JWT를 생성
+    // -> 사용자 userId만으로 토큰을 생성할 때 사용하는 메서드 (간단, 효율적)
+    // -> 로그인 이후, 사용자 정보를 간단히 전달할 때 사용
+    public String createByUserId(final Long userId) {
+        // 1) 토큰 만료 시간을 현재 시각으로부터 1일 뒤로 설정
+        Date expiryDate = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
+
+        // 2) JWT 토큰 생성
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId)) // 사용자 ID 설정
+                .setIssuedAt(new Date())            // 토큰 발급 시각 설정
+                .setExpiration(expiryDate)          // 토큰 만료 시각 설정
+                .signWith(SIGNING_KEY, SignatureAlgorithm.HS512) // 서명 (토큰 무결성 보장)
+                .compact(); // 최종 토큰 문자열 생성
+    }
 }
