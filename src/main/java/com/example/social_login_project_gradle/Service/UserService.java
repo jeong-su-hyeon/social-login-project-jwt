@@ -16,7 +16,7 @@ public class UserService {
     private final UserRepository userRepository;    // 데이터베이스 조회/저장
 
     // [추가] 사용자 정보 저장 (회원가입)
-    public UserEntity insertUser(UserEntity user) {
+    public UserEntity signupUser(UserEntity user) {
         // null 체크
         if (user == null || user.getUsername() == null) {
             throw new RuntimeException("[Service] 유효하지 않은 속성");
