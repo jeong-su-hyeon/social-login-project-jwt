@@ -23,6 +23,6 @@ public interface TodoRepository extends JpaRepository<TodoEntity, Long> {
     // ?1 : 첫번째 파라미터를 의미
     // -> User에 해당하는 할 일 하나를 조회하여 TodoEntity를 반환함
     // -> (주의) 결과가 하나만 있을 경우에만 사용함
-    @Query("SELECT t FROM TodoEntity t WEHRE t.userId = ?1 userId")
+    @Query("SELECT t FROM TodoEntity t WHERE t.userId = ?1")
     TodoEntity findByUserIdQuery(Long userId);
 }

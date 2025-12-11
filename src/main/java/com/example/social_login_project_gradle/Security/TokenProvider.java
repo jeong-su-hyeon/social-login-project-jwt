@@ -20,7 +20,7 @@ public class TokenProvider {
 
     // 비밀 키 (JWT 서명할 때 사용하는 비밀 문자열)
     // -> 토큰의 무결성 보장
-    private static final String SECRET_KEY = "";
+    private static final String SECRET_KEY = "FWFQA3UbMjQu4NkmIfM6rbrmVK0D4RQjsksGZimBFavSGUveAXWWLf7FRSyjhHtMV9M1iOcegkqy464AdwrKX15EGCm7UB6lFftPTIDj";
 
     // 비밀 키를 바탕으로 만들어진 서명용 키 객체 (HMAC SHA)
     // 비밀 키를 바이트 배열로 변환한 뒤, hmacShaKeyFor() 메서드를 사용해

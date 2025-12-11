@@ -25,6 +25,6 @@ public class UserEntity {
     @Column(nullable = false, name = "password")
     private String password;    // 사용자 패스워드 (소셜 로그인 시, null)
 
-    @Column(nullable = false, name = "role")
+    @Column(nullable = true, name = "role")
     private String role;        // 사용자 역할 (ex. ROLE_USER, ROLE_ADMIN)
 }
