@@ -49,8 +49,8 @@ public class WebSecurityConfig {
                 // -> UsernamepasswordAuthenticaitonFilter 이후에 실행되도록
                 .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exception -> exception
-                        // 7) 인증 실패 시 응답 (403 반환)
-                        .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+                // 7) 인증 실패 시 응답 (403 반환)
+                .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
                 );
 
         return http.build();
@@ -62,7 +62,7 @@ public class WebSecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true); // 인증 정보를 포함한 요청 허용
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // 허용할 프론트엔드 도메인
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // 허용할 프론트엔드 도메인
         configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS")); // 허용할 요청 메서드
         configuration.setAllowedHeaders(List.of("*")); // 모든 요청 헤더 허용
         configuration.setExposedHeaders(List.of("*")); // 응답 헤더 노출 (응답 시 브라우저에서 접근할 수 있도록 허용할 헤드)
