@@ -58,13 +58,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // 1) 요청 헤더에서 JWT 토큰 추출, 파싱
             String token = parseBearerToken(request);
-            log.info("[JwtAuthenticationFilte] 필터 내부 로직 수행");
+            log.info("[JwtAuthenticationFilte] Starting internal filter logic");
 
             // 토큰이 존재하고, null이 아닌 경우
-            if (token != null && token.equalsIgnoreCase("null")) {
+            if (token != null && StringUtils.hasText(token)) {
                 // 2) 토큰 검증 및 userId 추출
                 String userId = tokenProvider.validateAndGetUserId(token);
-                log.info("[JwtAuthenticationFilte] 인증된 사용자 userId : " + userId);
+                log.info("[JwtAuthenticationFilte] Authenticated userId: " + userId);
 
                 // 3) 인증 객체 생성 (userId 기반)
                 AbstractAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -81,7 +81,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // -> 나중에 @AuthenticaitonPrincipal이나, SecurityContextHolder.getContext()를 통해 현재 로그인한 사용자 정보에 접근 가능함
             }
         } catch (Exception ex) {
-            log.error("[JwtAuthenticationFilte] 사용자 정보를 SecurityContext에 등록할 수 없습니다.");
+            log.error("[JwtAuthenticationFilte] Could not set user authentication in security context.");
         }
 
         // 6) 다음 필터로 요청 전달 (JWT 토큰 검증 완료 후)
