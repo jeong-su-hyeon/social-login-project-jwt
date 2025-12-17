@@ -27,4 +27,7 @@ public class UserEntity {
 
     @Column(nullable = true, name = "role")
     private String role;        // 사용자 역할 (ex. ROLE_USER, ROLE_ADMIN)
+
+    @Column(nullable = true, name = "auth_provider")
+    private String authProvider;
 }
