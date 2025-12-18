@@ -1,11 +1,15 @@
 package com.example.social_login_project_gradle.Config;
 
+import com.example.social_login_project_gradle.Handler.OAuthSuccessHandler;
+import com.example.social_login_project_gradle.Security.CustomOAuth2UserService;
 import com.example.social_login_project_gradle.Security.JwtAuthenticationFilter;
+import com.example.social_login_project_gradle.Security.RedirectUrlCookieFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -17,16 +21,28 @@ import java.util.List;
 
 @Configuration      // 설정 클래스로 명시
 @EnableWebSecurity  // Spring Security 활성화
-// JWT 기반 인증 적용, 세션 사용 x, CORS 설정까지 포함
+// JWT 기반 인증 적용, 세션 사용 x, CORS 설정까지 포함 (보안 관련 처리)
 public class WebSecurityConfig {
 
     // [JWT 인증 필터 의존성]
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    // [사용자 정보를 로드]
+    private final CustomOAuth2UserService customOAuth2UserService;
+    // [Oauth2 로그인 성공 후 핸들러]
+    private final OAuthSuccessHandler oAuthSuccessHandler;
+    // [리다이렉트 URL 쿠키에 저장]
+    private final RedirectUrlCookieFilter redirectUrlCookieFilter;
 
-    public WebSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        // 생성자 주입 방식
+    public WebSecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                             CustomOAuth2UserService customOAuth2UserService,
+                             OAuthSuccessHandler oAuthSuccessHandler,
+                             RedirectUrlCookieFilter redirectUrlCookieFilter) {
+        // < 생성자 주입 방식 > 불변성 보장, 테스트 용이성, 코드 명확화
         // Spring Security 필터 체인에 커스텀 필터 클래스 주입
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter; // 사용자가 보낸 JWT 토큰을 검사해서 인증 처리
+        this.customOAuth2UserService = customOAuth2UserService; // 소셜 로그인을 통해 제공받은 사용자 정보 가공 및 저장
+        this.oAuthSuccessHandler = oAuthSuccessHandler;         // 로그인 성공 시 JWT를 발급하고, 클라이언트를 리디렉션
+        this.redirectUrlCookieFilter = redirectUrlCookieFilter; // 로그인 요청 시 redirect_url을 쿠키에 저장
     }
 
     // [보안 필터 체인 설정]
@@ -48,12 +64,21 @@ public class WebSecurityConfig {
                 // 6) JWT 인증 필터 등록
                 // -> UsernamepasswordAuthenticaitonFilter 이후에 실행되도록
                 .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // 7) OAuth 로그인 설정
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                        .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuthSuccessHandler)
+                )
+                // 8) 인증 실패 시 응답 (403 반환)
                 .exceptionHandling(exception -> exception
-                // 7) 인증 실패 시 응답 (403 반환)
                 .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-                );
+                )
+                // 9) 리다이렉트 URL 쿠키 필터 (리다이렉트 필터 이전에 실행)
+                .addFilterBefore(redirectUrlCookieFilter, OAuth2AuthorizationRequestRedirectFilter.class);
 
-        return http.build();
+        return http.build(); // 필터 체인 반환
     }
 
     // [CORS 설정 정의]
