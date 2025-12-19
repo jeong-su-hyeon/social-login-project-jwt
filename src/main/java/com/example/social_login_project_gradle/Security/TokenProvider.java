@@ -4,8 +4,11 @@ import com.example.social_login_project_gradle.Entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.security.Keys;
+
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
@@ -27,9 +30,10 @@ public class TokenProvider {
     // HMAC SHA-512 알고리즘을 사용하는 서명용 Key 객체로 변환
     // 토큰을 사용할 땐 서명용 키, 토큰을 검증할 땐 검증용 키로 사용됨
     // -> JWT의 위,변조를 막고, 유효한 토큰인지 확인할 수 있음
-    private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    //private static final Key SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    private static final SecretKey SIGNING_KEY = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
-    // [생성] 사용자 정보 기반 JWT 토큰 생성
+    // [생성] (일반 로그인 전용) 사용자 정보 기반 JWT 토큰 생성
     public String create(UserEntity userEntity) {
         // 1) 토큰 만료 시간을 현재 시각으로부터 1일 뒤로 설정
         Date expiryDate = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
@@ -38,11 +42,25 @@ public class TokenProvider {
         return Jwts.builder()
                 //.signWith(SIGNING_KEY, SignatureAlgorithm.HS512)
                 .signWith(SIGNING_KEY)                         // 서명 알고리즘과 키 설정
-                .setSubject(String.valueOf(userEntity.getId()))  // 사용자 ID를 subject(주체)로 설정
-                .setIssuer("social-login-project-jwt")           // 토큰 발급자 정보 설정
-                .setIssuedAt(new Date())                         // 토큰 발급 시각 설정
-                .setExpiration(expiryDate)                       // 토큰 만료 시간 설정
+                .subject(String.valueOf(userEntity.getId()))  // 사용자 ID를 subject(주체)로 설정
+                .issuer("social-login-project-jwt")           // 토큰 발급자 정보 설정
+                .issuedAt(new Date())                         // 토큰 발급 시각 설정
+                .expiration(expiryDate)                       // 토큰 만료 시간 설정
                 .compact();                                      // 토큰 생성 완료
+    }
+
+    // [생성] (소셜 로그인 전용) 사용자 정보 기반 JWT 토큰 생성
+    public String create(final Authentication authentication) {
+        CustomUser userPrincipal = (CustomUser) authentication.getPrincipal();
+
+        Date expiryDate = Date.from(Instant.now().plus(1, ChronoUnit.DAYS));
+
+        return Jwts.builder()
+                .signWith(SIGNING_KEY)
+                .subject(userPrincipal.getName())
+                .issuedAt(new Date())
+                .expiration(expiryDate)
+                .compact();
     }
 
     // [검증] JWT 토큰을 검증하고, 포함된 사용자 id를 반환
@@ -52,10 +70,10 @@ public class TokenProvider {
         // 1) 토큰 파싱 및 검증 (서명이 유효한지 확인)
         // parserBuilder() -> parser()로 변경
         Claims claims = Jwts.parser()
-                .setSigningKey(SIGNING_KEY) // 서명 키 설정
+                .verifyWith(SIGNING_KEY) // 서명 키 설정
                 .build()
-                .parseClaimsJws(token)      // 토큰 파싱
-                .getBody();                 // Payload(Claims) 추출
+                .parseSignedClaims(token)      // 토큰 파싱
+                .getPayload();                 // Payload(Claims) 추출
 
         return  claims.getSubject();        // 사용자 ID (subject) 반환
     }
@@ -71,10 +89,10 @@ public class TokenProvider {
 
         // 2) JWT 토큰 생성
         return Jwts.builder()
-                .setSubject(String.valueOf(userId)) // 사용자 ID 설정
-                .setIssuedAt(new Date())            // 토큰 발급 시각 설정
-                .setExpiration(expiryDate)          // 토큰 만료 시각 설정
-                .signWith(SIGNING_KEY, SignatureAlgorithm.HS512) // 서명 (토큰 무결성 보장)
+                .signWith(SIGNING_KEY)           // 서명 (토큰 무결성 보장)
+                .subject(String.valueOf(userId)) // 사용자 ID 설정
+                .issuedAt(new Date())            // 토큰 발급 시각 설정
+                .expiration(expiryDate)          // 토큰 만료 시각 설정
                 .compact(); // 최종 토큰 문자열 생성
     }
 }
