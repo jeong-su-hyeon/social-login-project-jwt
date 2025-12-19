@@ -22,12 +22,12 @@ public class UserEntity {
     @Column(nullable = false, unique = true, name = "username")
     private String username;    // 사용자 이름 (이메일)
 
-    @Column(nullable = false, name = "password")
+    @Column(name = "password")
     private String password;    // 사용자 패스워드 (소셜 로그인 시, null)
 
-    @Column(nullable = true, name = "role")
+    @Column(name = "role")
     private String role;        // 사용자 역할 (ex. ROLE_USER, ROLE_ADMIN)
 
-    @Column(nullable = true, name = "auth_provider")
+    @Column(name = "auth_provider")
     private String authProvider;
 }
